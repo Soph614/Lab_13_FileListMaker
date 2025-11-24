@@ -15,62 +15,70 @@ public class Lab_13_FileListMaker {
         boolean surelyDone = false;
         boolean needsToBeSaved = false;
         do {
-            displayMenu();
-            String menuChoice = SafeInput.getRegExString(pipe, "Choose what you would like to do:", "[AaCcDdIiMmOoSsVvQq]");
-            switch(menuChoice) {
-                case "A":
-                case "a":
-                    addToList(pipe, "What would you like to add to the list?");
-                    needsToBeSaved = true;
-                    break;
-                case "C":
-                case "c":
-                    clearList();
-                    needsToBeSaved = true;
-                    break;
-                case "D":
-                case "d":
-                    deleteItem(pipe);
-                    needsToBeSaved = true;
-                    break;
-                case "I":
-                case "i":
-                    insertItem(pipe);
-                    needsToBeSaved = true;
-                    break;
-                case "M":
-                case "m":
-                    moveItem(pipe);
-                    needsToBeSaved = true;
-                    break;
-                case "O":
-                case "o":
-                    if(needsToBeSaved) {
-                        safeToOpenCheck(pipe, true);
-                    }
-                    else {
-                        safeToOpenCheck(pipe, false);
-                    }
-                    needsToBeSaved = false;
-                    break;
-                case "S":
-                case "s":
-                    saveList(pipe);
-                    needsToBeSaved = false;
-                    break;
-                case "V":
-                case "v":
-                    displayList();
-                    break;
-                case "Q":
-                case "q":
-                    if(needsToBeSaved) {
-                        surelyDone = quit(pipe, true);
-                    }
-                    else {
-                        surelyDone = quit(pipe, false);
-                    }
-                    break;
+            try {
+                displayMenu();
+                String menuChoice = SafeInput.getRegExString(pipe, "Choose what you would like to do:", "[AaCcDdIiMmOoSsVvQq]");
+                switch(menuChoice) {
+                    case "A":
+                    case "a":
+                        addToList(pipe, "What would you like to add to the list?");
+                        needsToBeSaved = true;
+                        break;
+                    case "C":
+                    case "c":
+                        clearList();
+                        needsToBeSaved = true;
+                        break;
+                    case "D":
+                    case "d":
+                        deleteItem(pipe);
+                        needsToBeSaved = true;
+                        break;
+                    case "I":
+                    case "i":
+                        insertItem(pipe);
+                        needsToBeSaved = true;
+                        break;
+                    case "M":
+                    case "m":
+                        moveItem(pipe);
+                        needsToBeSaved = true;
+                        break;
+                    case "O":
+                    case "o":
+                        if(needsToBeSaved) {
+                            safeToOpenCheck(pipe, true);
+                        }
+                        else {
+                            safeToOpenCheck(pipe, false);
+                        }
+                        needsToBeSaved = false;
+                        break;
+                    case "S":
+                    case "s":
+                        saveList(pipe);
+                        needsToBeSaved = false;
+                        break;
+                    case "V":
+                    case "v":
+                        displayList();
+                        break;
+                    case "Q":
+                    case "q":
+                        if(needsToBeSaved) {
+                            surelyDone = quit(pipe, true);
+                        }
+                        else {
+                            surelyDone = quit(pipe, false);
+                        }
+                        break;
+                }
+            } catch (RuntimeException e) {
+                throw new RuntimeException(e);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
             }
         }while(!surelyDone);
     }
