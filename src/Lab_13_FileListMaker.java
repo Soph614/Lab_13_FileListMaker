@@ -26,6 +26,7 @@ public class Lab_13_FileListMaker {
                 case "C":
                 case "c":
                     clearList();
+                    needsToBeSaved = true;
                     break;
                 case "D":
                 case "d":
@@ -39,19 +40,23 @@ public class Lab_13_FileListMaker {
                     break;
                 case "M":
                 case "m":
+                    moveItem(pipe);
+                    needsToBeSaved = true;
                     break;
                 case "O":
                 case "o":
                     if(needsToBeSaved) {
-                        openListCheck(pipe, true);
+                        safeToOpenCheck(pipe, true);
                     }
                     else {
-                        openListCheck(pipe, false);
+                        safeToOpenCheck(pipe, false);
                     }
+                    needsToBeSaved = false;
                     break;
                 case "S":
                 case "s":
                     saveList(pipe);
+                    needsToBeSaved = false;
                     break;
                 case "V":
                 case "v":
@@ -59,7 +64,12 @@ public class Lab_13_FileListMaker {
                     break;
                 case "Q":
                 case "q":
-                    surelyDone = SafeInput.getYNConfirm(pipe, "Quitting the program will automatically delete your list. Are you sure you want to quit? ");
+                    if(needsToBeSaved) {
+                        surelyDone = quit(pipe, true);
+                    }
+                    else {
+                        surelyDone = quit(pipe, false);
+                    }
                     break;
             }
         }while(!surelyDone);
@@ -82,7 +92,7 @@ public class Lab_13_FileListMaker {
             System.out.println("You can't remove anything because there is nothing in your list!");
         }
         else {
-            int userInt = SafeInput.getRangedInt(pipe, "Type in the location of the item you want removed [0-" + realSize + "]. Location", "There is no item at that location.", 0, realSize);
+            int userInt = SafeInput.getRangedInt(pipe, "Type in the location of the item you want removed [0-" + realSize + "]. Location ", "There is no item at that location.", 0, realSize);
             list.remove(userInt);
             pipe.nextLine();
         }
@@ -104,17 +114,17 @@ public class Lab_13_FileListMaker {
     }
 
     private static void displayMenu() {
-        System.out.print("------------- MENU --------------\n");
+        System.out.print("--------------- MENU ----------------\n");
         System.out.print("A – Add an item to the list\n");
         System.out.print("C - Clear the list\n");
         System.out.print("D – Delete an item from the list\n");
         System.out.print("I – Insert an item into the list\n");
-        System.out.print("M - Move an item to another list\n");
+        System.out.print("M - Move an item to another location\n");
         System.out.print("O - Open a list\n");
         System.out.print("S - Save current list\n");
         System.out.print("V – View the list\n");
         System.out.print("Q – Quit the program\n");
-        System.out.print("---------------------------------\n");
+        System.out.print("-------------------------------------\n");
     }
 
     private static void insertItem(Scanner pipe) {
@@ -130,14 +140,12 @@ public class Lab_13_FileListMaker {
         System.out.println("What list would you like to open? ");
         String fileToOpen = pipe.nextLine();
         File f = new File(fileToOpen);
+        String fileToOpenWithExtension = fileToOpen + ".txt";
+        File withExtension = new File(fileToOpenWithExtension);
         if(f.exists() && !f.isDirectory()) {
             try(Scanner myReader = new Scanner(f)) {
-                /* while(myReader.hasNextLine()) {
-                    String listContent = myReader.nextLine();
-                    System.out.println(listContent);
-                }
-                 */
                 list = new ArrayList<>(Files.readAllLines(Paths.get(fileToOpen)));
+                displayList();
             } catch (FileNotFoundException e) {
                 System.out.println("There is no file named" + f);
                 e.printStackTrace();
@@ -145,20 +153,38 @@ public class Lab_13_FileListMaker {
                 throw new RuntimeException(e);
             }
         }
+        else if(withExtension.exists() && !withExtension.isDirectory()) {
+            System.out.println("The file you tried to open was saved as a text file, so it has the file extension, '.txt.");
+            System.out.println("Enter the name of the file again, with the '.txt' extension.");
+            openList(pipe);
+        }
+        else {
+            System.out.println("No such file found.");
+        }
     }
 
-    private static void openListCheck(Scanner pipe, boolean needsToBeSaved) {
+    private static void moveItem(Scanner pipe) {
+        Integer currentSizeOfList = list.size();
+        int locationOfItem = SafeInput.getRangedInt(pipe, "What is the current location of the item you want moved? ", "There is no item at that location", 0, currentSizeOfList);
+        String toBeAdded = list.get(locationOfItem);
+        int userInt = SafeInput.getRangedInt(pipe, "Where would you like to add '" + toBeAdded + "'? Location ", "There is no item at that location.", 0, currentSizeOfList);
+        list.remove(locationOfItem);
+        list.add(userInt, toBeAdded);
+        pipe.nextLine();
+    }
+
+    private static void safeToOpenCheck(Scanner pipe, boolean needsToBeSaved) {
         if (!needsToBeSaved) {
             openList(pipe);
         }
         else {
             System.out.println("If you open a new list now, your current list will be lost.");
             String userChoice = SafeInput.getRegExString(pipe,"Press S to save the list and continue, press Q to continue without saving.", "[SsQq]");
-            if(userChoice.equals("S")) {
+            if(userChoice.equalsIgnoreCase("S")) {
                 saveList(pipe);
                 openList(pipe);
             }
-            else {
+            else { // (if they press Q or q)
                 openList(pipe);
             }
         }
@@ -167,7 +193,8 @@ public class Lab_13_FileListMaker {
     private static void saveList(Scanner pipe) {
         System.out.println("What would you like to name the file?");
         String fileName = pipe.nextLine();
-        Path path = Paths.get(fileName);
+        String fileNameWithExtension = fileName + ".txt";
+        Path path = Paths.get(fileNameWithExtension);
         try {
             Files.write(path, list);
         } catch(IOException e) {
@@ -175,11 +202,23 @@ public class Lab_13_FileListMaker {
         }
     }
 
-    private static void listWithLocation() {
-        int num = -1;
-        for(String l : list) {
-            num = num + 1;
-            System.out.println(num + " " + l);
+    private static boolean quit(Scanner pipe, boolean needsToBeSaved) {
+        boolean done = false;
+        if (needsToBeSaved) {
+            System.out.println("If you quit the program now, you will the updates you have made to your list.");
+            String userChoice = SafeInput.getRegExString(pipe,"Press S to save the list before closing, press Q to quit without saving.", "[SsQq]");
+            if(userChoice.equalsIgnoreCase("S")) {
+                saveList(pipe);
+                done = true;
+            }
+            else {
+                done = true;
+            }
         }
+        else {
+            System.out.println("Goodbye!");
+            done = true;
+        }
+        return done;
     }
 }
