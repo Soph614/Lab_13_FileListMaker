@@ -1,9 +1,11 @@
-import java.io.IOException;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.io.IOException;
 
 public class Lab_13_FileListMaker {
     static ArrayList<String> list = new ArrayList<>();
@@ -11,7 +13,7 @@ public class Lab_13_FileListMaker {
     public static void main(String[] args) {
         Scanner pipe = new Scanner(System.in);
         boolean surelyDone = false;
-        boolean needsToBeSaved;
+        boolean needsToBeSaved = false;
         do {
             displayMenu();
             String menuChoice = SafeInput.getRegExString(pipe, "Choose what you would like to do:", "[AaCcDdIiMmOoSsVvQq]");
@@ -19,6 +21,7 @@ public class Lab_13_FileListMaker {
                 case "A":
                 case "a":
                     addToList(pipe, "What would you like to add to the list?");
+                    needsToBeSaved = true;
                     break;
                 case "C":
                 case "c":
@@ -27,16 +30,24 @@ public class Lab_13_FileListMaker {
                 case "D":
                 case "d":
                     deleteItem(pipe);
+                    needsToBeSaved = true;
                     break;
                 case "I":
                 case "i":
                     insertItem(pipe);
+                    needsToBeSaved = true;
                     break;
                 case "M":
                 case "m":
                     break;
                 case "O":
                 case "o":
+                    if(needsToBeSaved) {
+                        openListCheck(pipe, true);
+                    }
+                    else {
+                        openListCheck(pipe, false);
+                    }
                     break;
                 case "S":
                 case "s":
@@ -58,7 +69,6 @@ public class Lab_13_FileListMaker {
     private static void addToList(Scanner pipe, String prompt) {
         System.out.print(prompt + " ");
         list.add(pipe.nextLine());
-        boolean needsToBeSaved = true;
     }
 
     private static void clearList() {
@@ -75,7 +85,6 @@ public class Lab_13_FileListMaker {
             int userInt = SafeInput.getRangedInt(pipe, "Type in the location of the item you want removed [0-" + realSize + "]. Location", "There is no item at that location.", 0, realSize);
             list.remove(userInt);
             pipe.nextLine();
-            boolean needsToBeSaved = true;
         }
     }
 
@@ -115,12 +124,27 @@ public class Lab_13_FileListMaker {
         int userInt = SafeInput.getRangedInt(pipe, "Where would you like to add '" + toBeAdded + "'? Location", "There is no item at that location.", 0, currentSizeOfList);
         list.add(userInt, toBeAdded);
         pipe.nextLine();
-        boolean needsToBeSaved = true;
     }
 
     private static void openList(Scanner pipe) {
         System.out.println("What list would you like to open? ");
-
+        String fileToOpen = pipe.nextLine();
+        File f = new File(fileToOpen);
+        if(f.exists() && !f.isDirectory()) {
+            try(Scanner myReader = new Scanner(f)) {
+                /* while(myReader.hasNextLine()) {
+                    String listContent = myReader.nextLine();
+                    System.out.println(listContent);
+                }
+                 */
+                list = new ArrayList<>(Files.readAllLines(Paths.get(fileToOpen)));
+            } catch (FileNotFoundException e) {
+                System.out.println("There is no file named" + f);
+                e.printStackTrace();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private static void openListCheck(Scanner pipe, boolean needsToBeSaved) {
